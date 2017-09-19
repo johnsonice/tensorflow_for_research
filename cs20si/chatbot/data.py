@@ -72,7 +72,7 @@ def prepare_dataset(questions, answers):
     filenames = ['train.enc', 'train.dec', 'test.enc', 'test.dec']
     files = []
     for filename in filenames:
-        files.append(open(os.path.join(config.PROCESSED_PATH, filename),'wb'))
+        files.append(open(os.path.join(config.PROCESSED_PATH, filename),'w'))
 
     for i in range(len(questions)):
         if i in test_ids:
@@ -124,7 +124,7 @@ def build_vocab(filename, normalize_digits=True):
                 vocab[token] += 1
 
     sorted_vocab = sorted(vocab, key=vocab.get, reverse=True)
-    with open(out_path, 'wb') as f:
+    with open(out_path, 'w') as f:
         f.write('<pad>' + '\n')
         f.write('<unk>' + '\n')
         f.write('<s>' + '\n')
