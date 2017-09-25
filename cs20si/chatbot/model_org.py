@@ -1,10 +1,20 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 24 21:09:07 2017
+""" A neural chatbot using sequence to sequence model with
+attentional decoder. 
 
-@author: chengyu
+This is based on Google Translate Tensorflow model 
+https://github.com/tensorflow/models/blob/master/tutorials/rnn/translate/
+
+Sequence to sequence model by Cho et al.(2014)
+
+Created by Chip Huyen as the starter code for assignment 3,
+class CS 20SI: "TensorFlow for Deep Learning Research"
+cs20si.stanford.edu
+
+This file contains the code to build the model
+
+See readme.md for instruction on how to run the starter code.
 """
+from __future__ import print_function
 
 import time
 
@@ -20,7 +30,7 @@ class ChatBotModel(object):
         print('Initialize new model')
         self.fw_only = forward_only
         self.batch_size = batch_size
-
+    
     def _create_placeholders(self):
         # Feeds for inputs. It's a list of placeholders
         print('Create placeholders')
@@ -43,33 +53,29 @@ class ChatBotModel(object):
             b = tf.get_variable('proj_b', [config.DEC_VOCAB])
             self.output_projection = (w, b)
 
-        def sampled_loss(labels, logits):
+        def sampled_loss(inputs, labels):
             labels = tf.reshape(labels, [-1, 1])
-            return tf.nn.sampled_softmax_loss(tf.transpose(w), b, labels, logits, 
+            return tf.nn.sampled_softmax_loss(tf.transpose(w), b, inputs, labels, 
                                               config.NUM_SAMPLES, config.DEC_VOCAB)
         self.softmax_loss_function = sampled_loss
-        def single_cell():
-            return tf.contrib.rnn.GRUCell(config.HIDDEN_SIZE)
-        
-        self.cell = tf.contrib.rnn.MultiRNNCell([single_cell() for _ in range(config.NUM_LAYERS)])
-    
-        #single_cell = tf.nn.rnn_cell.GRUCell(config.HIDDEN_SIZE)
-        #self.cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * config.NUM_LAYERS)
+
+        single_cell = tf.nn.rnn_cell.GRUCell(config.HIDDEN_SIZE)
+        self.cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * config.NUM_LAYERS)
 
     def _create_loss(self):
         print('Creating loss... \nIt might take a couple of minutes depending on how many buckets you have.')
         start = time.time()
         def _seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
-            return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
+            return tf.nn.seq2seq.embedding_attention_seq2seq(
                     encoder_inputs, decoder_inputs, self.cell,
                     num_encoder_symbols=config.ENC_VOCAB,
                     num_decoder_symbols=config.DEC_VOCAB,
                     embedding_size=config.HIDDEN_SIZE,
                     output_projection=self.output_projection,
                     feed_previous=do_decode)
-        
+
         if self.fw_only:
-            self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
+            self.outputs, self.losses = tf.nn.seq2seq.model_with_buckets(
                                         self.encoder_inputs, 
                                         self.decoder_inputs, 
                                         self.targets,
@@ -84,7 +90,7 @@ class ChatBotModel(object):
                                             self.output_projection[0]) + self.output_projection[1]
                                             for output in self.outputs[bucket]]
         else:
-            self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
+            self.outputs, self.losses = tf.nn.seq2seq.model_with_buckets(
                                         self.encoder_inputs, 
                                         self.decoder_inputs, 
                                         self.targets,
@@ -93,7 +99,7 @@ class ChatBotModel(object):
                                         lambda x, y: _seq2seq_f(x, y, False),
                                         softmax_loss_function=self.softmax_loss_function)
         print('Time:', time.time() - start)
-    
+
     def _creat_optimizer(self):
         print('Create optimizer... \nIt might take a couple of minutes depending on how many buckets you have.')
         with tf.variable_scope('training') as scope:
@@ -115,7 +121,8 @@ class ChatBotModel(object):
                                                             global_step=self.global_step))
                     print('Creating opt for bucket {} took {} seconds'.format(bucket, time.time() - start))
                     start = time.time()
-    
+
+
     def _create_summary(self):
         pass
 
@@ -125,7 +132,3 @@ class ChatBotModel(object):
         self._create_loss()
         self._creat_optimizer()
         self._create_summary()
-
-if __name__ ==  '__main__':
-    model = ChatBotModel(False, config.BATCH_SIZE)
-    model.build_graph()
