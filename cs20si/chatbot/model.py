@@ -48,8 +48,9 @@ class ChatBotModel(object):
             return tf.nn.sampled_softmax_loss(tf.transpose(w), b, labels, logits, 
                                               config.NUM_SAMPLES, config.DEC_VOCAB)
         self.softmax_loss_function = sampled_loss
+        
         def single_cell():
-            return tf.contrib.rnn.GRUCell(config.HIDDEN_SIZE)
+            return tf.contrib.rnn.BasicLSTMCell(config.HIDDEN_SIZE,reuse=tf.get_variable_scope().reuse)
         
         self.cell = tf.contrib.rnn.MultiRNNCell([single_cell() for _ in range(config.NUM_LAYERS)])
     
@@ -66,7 +67,8 @@ class ChatBotModel(object):
                     num_decoder_symbols=config.DEC_VOCAB,
                     embedding_size=config.HIDDEN_SIZE,
                     output_projection=self.output_projection,
-                    feed_previous=do_decode)
+                    feed_previous=do_decode,
+                    dtype=tf.float32)
         
         if self.fw_only:
             self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(

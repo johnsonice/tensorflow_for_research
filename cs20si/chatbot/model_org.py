@@ -132,3 +132,7 @@ class ChatBotModel(object):
         self._create_loss()
         self._creat_optimizer()
         self._create_summary()
+        
+if __name__ ==  '__main__':
+    model = ChatBotModel(False, config.BATCH_SIZE)
+    model.build_graph()

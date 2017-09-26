@@ -47,7 +47,7 @@ These buckets size seem to work the best
 # [37049, 33519, 30223, 33513, 37371]
 # BUCKETS = [(8, 10), (12, 14), (16, 19), (23, 26), (39, 43)]
 
-# BUCKETS = [(8, 10), (12, 14), (16, 19)]
+#BUCKETS = [(8, 10), (12, 14), (16, 19)]
 BUCKETS = [(16, 19)]
 
 NUM_LAYERS = 3
@@ -62,3 +62,7 @@ ENC_VOCAB = 24411
 DEC_VOCAB = 24676
 ENC_VOCAB = 24485
 DEC_VOCAB = 24637
+ENC_VOCAB = 24460
+DEC_VOCAB = 24681
+ENC_VOCAB = 24478
+DEC_VOCAB = 24685
